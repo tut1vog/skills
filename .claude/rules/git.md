@@ -1,7 +1,5 @@
 # Git
 
-**When to read this**: read before making any commit.
-
 ## Rules
 
 - **One logical change per commit.** A new skill, a rule update, and a README edit are three separate commits — not one.

@@ -1,7 +1,5 @@
 # Skill authoring
 
-**When to read this**: read before creating, editing, or reviewing any skill — i.e. any file under `skills/` or `.claude/skills/`.
-
 ## Rules
 
 - **Always use the `write-a-skill` skill to create a new skill.** Do not draft a skill from scratch by inventing structure or filenames. Load `.claude/skills/write-a-skill/SKILL.md` and follow its Process section (gather requirements → draft → review with user) and the SKILL.md template defined there.

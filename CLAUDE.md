@@ -5,29 +5,11 @@ A workspace for authoring Claude Code skills. Each authored skill is a directory
 ## Stack
 - Markdown for `SKILL.md` and supporting docs.
 - No language runtime committed at the project level. Individual skills may bundle scripts in any language; declare runtime requirements inside that skill's directory.
+- No build, test, lint, or run commands at the project level — skills are validated manually by loading them in a session.
 
 ## Directory Layout
-```
-skills/                    # Authored skills — source of truth for distribution
-└── <skill-name>/
-    ├── SKILL.md           # Required
-    ├── REFERENCE.md       # Optional
-    ├── EXAMPLES.md        # Optional
-    └── scripts/           # Optional
 
-.claude/skills/            # Skills loaded into this project's Claude session
-└── write-a-skill/         # Authoring helper — see its SKILL.md
-
-.claude/rules/             # Behavioral rules (load on demand — see index below)
-LICENSE                    # MIT
-README.md
-```
-
-## Canonical Commands
-- Build: n/a
-- Test:  n/a (skills are validated manually by loading them in a session)
-- Lint:  n/a
-- Run:   n/a
+See [README.md](README.md#layout) for the directory layout.
 
 ## Rules (load on demand)
 Each rule file below is a focused behavioral contract. Read a rule file when its trigger matches your task — do not auto-load.
