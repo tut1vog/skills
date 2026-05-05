@@ -1,15 +1,15 @@
 # guide-me — worked examples
 
-One canonical example per supported explanation medium. Each example shows what the rendered output looks like for the *initial* turn after `guide me on <concept>`; the idempotency example also walks through `[branch]` and a free-form follow-up so the multi-turn shape is anchored once.
+One canonical example per supported explanation medium. Each example shows what the rendered output looks like for the *initial* turn after `guide me on <concept>`; the idempotency example also walks through `[branch]` and a free-form follow-up so the multi-turn shape is anchored once, and demonstrates the `Sources:` block (rendered on anchor-creation turns, gated off on conceptual free-form turns).
 
 ## Concept → medium
 
-| Concept                  | Medium       | Turns shown                                  |
-|--------------------------|--------------|----------------------------------------------|
-| idempotency              | prose        | initial, `[branch]`, free-form follow-up     |
-| recursion                | code block   | initial only                                 |
-| TCP three-way handshake  | ASCII diagram| initial only                                 |
-| big-o comparison         | table        | initial only                                 |
+| Concept                  | Medium       | Turns shown                                  | Sources block                                          |
+|--------------------------|--------------|----------------------------------------------|--------------------------------------------------------|
+| idempotency              | prose        | initial, `[branch]`, free-form follow-up     | shown on initial + `[branch]`; gated off on free-form  |
+| recursion                | code block   | initial only                                 | not shown (example predates feature; render per spec)  |
+| TCP three-way handshake  | ASCII diagram| initial only                                 | not shown (example predates feature; render per spec)  |
+| big-o comparison         | table        | initial only                                 | not shown (example predates feature; render per spec)  |
 
 ## guide me on idempotency (prose)
 
@@ -36,6 +36,10 @@ Syllabus for idempotency:
   [ ] **Pure functions** — stronger property: same input → same output, no side effects.
   [ ] **Failure modes** — how non-idempotent retries break payments, queues, APIs.
 
+Sources:
+  - RFC 9110 §9.2.2 Idempotent Methods — https://datatracker.ietf.org/doc/html/rfc9110#section-9.2.2
+  - Idempotence (Wikipedia) — https://en.wikipedia.org/wiki/Idempotence
+
 [quiz] [branch <name>] [done]
 or ask anything about idempotency
 ```
@@ -58,13 +62,17 @@ Syllabus for Idempotency keys:
   [ ] **Scope and collision** — per-user, per-tenant, global; avoiding clashes.
   [ ] **Failure recovery** — what happens if the dedupe store is unavailable.
 
+Sources:
+  - Stripe API: Idempotent Requests — https://docs.stripe.com/api/idempotent_requests
+  - Idempotency Keys (Brandur Leach) — https://brandur.org/idempotency-keys
+
 [quiz] [branch <name>] [done]
 or ask anything about Idempotency keys
 ```
 
 User: `how do clients usually pick a key?`
 
-(Free-form specific question → focused answer; same anchor; map untouched. `UUID` was already glossed on the previous turn for this anchor, so Terms used dedup keeps it out — block omitted.)
+(Free-form specific question → focused answer; same anchor; map untouched. `UUID` was already glossed on the previous turn for this anchor, so Terms used dedup keeps it out — block omitted. The question is conceptual — asking about typical client behavior, not a version-specific fact — so it doesn't qualify for the free-form search trigger; the Sources block is omitted as well.)
 
 ```
 Path: idempotency [1/8] → Idempotency keys [0/4] (here)

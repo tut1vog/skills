@@ -1,6 +1,6 @@
 ---
 name: guide-me
-description: Explains a concept with inline jargon glosses, presents a comprehensive subtopic syllabus with visited-tracking, persists a tree map per root in /tmp, and accepts free-form follow-ups or menu commands (quiz/branch/done). Use when the user says "guide me on <concept>".
+description: Explains a concept with inline jargon glosses and links to authoritative web sources where available, presents a comprehensive subtopic syllabus with visited-tracking, persists a tree map per root in /tmp, and accepts free-form follow-ups or menu commands (quiz/branch/done). Use when the user says "guide me on <concept>".
 ---
 
 Activate only on the explicit phrasing "guide me on <concept>". Once active, stay active for plausible follow-ups (menu replies, free-form questions about the current concept) and drop the framing for clearly unrelated messages. A fresh "guide me on <concept>" resumes from the existing `/tmp/guide-me-<root-slug>.md` map if present (see Map file rules); type `restart` as the next user message to wipe and start over.
@@ -11,7 +11,8 @@ Activate only on the explicit phrasing "guide me on <concept>". Once active, sta
 2. **Explanation** — brief but thorough. Prose by default; may include one auxiliary medium (code, diagram, table, or genuinely list-shaped bullet list) when load-bearing. See "Explanation rules" below.
 3. **Terms used** — short glossary of comprehension-blocker terms used in the explanation. See "Terms used rules" below. Omit the entire block when no terms qualify.
 4. **Syllabus** — comprehensive list of subtopics covering the current anchor's full conceptual surface. See "Syllabus rules" below.
-5. **Menu line + free-form invitation** — exactly two lines: `[quiz] [branch <name>] [done]` followed by `or ask anything about <current>` on its own line.
+5. **Sources** — optional block of authoritative URLs grounding the explanation; omitted unless search ran. See "Search and sources rules" below.
+6. **Menu line + free-form invitation** — exactly two lines: `[quiz] [branch <name>] [done]` followed by `or ask anything about <current>` on its own line.
 
 ## Explanation rules
 
@@ -81,6 +82,7 @@ The map file at `/tmp/guide-me-<root-slug>.md` is the canonical state for a guid
 - **Hand-edit-friendly**: the file is plain markdown so the user may edit it (e.g., flip a checkbox, add a node, rename) between turns. The agent honors what it reads.
 - **Resume on fresh activation**: when "guide me on <X>" is issued and the file already exists, read it and emit a one-line notice: `Resumed: <root> [n/m covered, last anchor "<current>"]. Type 'restart' to wipe and start fresh.` Then proceed with a normal turn for the recovered current anchor. If the next user message is `restart`, delete the file and re-init.
 - **Persistence**: the file is not deleted on `[done]` — that is the entire point of canonical state. Resume across sessions works automatically.
+- **Sources persistence**: each searched anchor stores its URLs as a continuation line beneath the anchor bullet (2-space indent, no bullet marker). See "Search and sources rules" below for the schema.
 
 Map file format example (after `[branch Idempotency keys]` from a fresh idempotency session):
 
@@ -90,8 +92,10 @@ Current anchor: Idempotency keys
 Last updated: 2026-05-05T14:30:00Z
 
 - [x] **idempotency** (root)
+  Sources: https://en.wikipedia.org/wiki/Idempotence; https://datatracker.ietf.org/doc/html/rfc9110#section-9.2.2
   - [ ] **HTTP method semantics** — which verbs are required to be idempotent and why.
   - [x] **Idempotency keys** — client-supplied tokens used to dedupe retries server-side.
+    Sources: https://docs.stripe.com/api/idempotent_requests; https://brandur.org/idempotency-keys
     - [ ] **Key generation** — UUID, payload hash, client-controlled vs server-issued.
     - [ ] **Storage backend** — Redis, DB tables, TTL trade-offs.
     - [ ] **Scope and collision** — per-user, per-tenant, global; avoiding clashes.
@@ -103,6 +107,37 @@ Last updated: 2026-05-05T14:30:00Z
   - [ ] **Pure functions** — stronger property: same input → same output, no side effects.
   - [ ] **Failure modes** — how non-idempotent retries break payments, queues, APIs.
 ```
+
+## Search and sources rules
+
+Search grounds explanations and syllabi in authoritative web content, and surfaces the URLs to the user. The agent uses `WebSearch` and `WebFetch`; the result feeds both the explanation/syllabus generation (hidden grounding) and the `Sources:` block in the rendered turn (visible).
+
+- **Trigger — anchor creation**: fire the search pipeline when an anchor's syllabus is being generated. That happens on root activation, on `[branch <new-name>]` that creates a new child, and on first-visit to a hand-added node. Re-visits, quizzes, and `[done]` never trigger search.
+- **Trigger — free-form (narrow)**: on a free-form follow-up, fire a single grounding search **only if all three** hold: (a) the question asks for a concretely factual detail (version, date, name, number, spec section, current behavior of named software/standard); (b) the answer is plausibly post-cutoff or version-specific; (c) the agent's self-assessed confidence on that fact is below "I'd bet on this." Conceptual depth-requests (`tell me more`, `how does X work?`) never qualify.
+- **Pipeline**:
+  1. Issue `WebSearch` with the primary query: `<root>` for the root anchor, `<root>: <anchor-name>` for sub-anchors.
+  2. Pick up to 2 URLs by **authority bias** — prefer specs, RFCs, official vendor or project docs, maintainer blogs; deprioritize SEO listicles, AI-generated content farms, Q&A aggregators, tutorial sites by unknown authors. No domain allowlist; the agent uses judgment.
+  3. `WebFetch` each chosen URL.
+  4. Use the fetched content to ground the explanation and syllabus, and record the URLs for the `Sources:` block.
+- **Budget**:
+  - Anchor-creation: at most 2 `WebSearch` + 2 `WebFetch` per anchor entry. If the primary query returns nothing usable, the agent may rewrite the query once (e.g., add a domain hint, drop a stopword) — that's the second `WebSearch`. No further rewrites.
+  - Free-form qualifying turn: at most 1 `WebSearch` + 1 `WebFetch`. No rewrite.
+- **Failure handling**:
+  - On a tool-level transport error (network, rate limit), retry once. After that, treat as no usable result.
+  - On "no results" or "all results unusable," record the verdict.
+  - **Useless-content bar**: don't cite a URL just because fetch succeeded. The bar is "did this content actually inform the explanation/syllabus?" If not, drop it.
+- **Sources block (rendered output)**: between the Syllabus and Menu blocks. Three rendered states:
+  - Populated: heading `Sources:` followed by 1–3 list items, format `- <Page title> — <URL>`. Order most-authoritative first.
+  - Sticky failure: the single line `Sources: (none — model knowledge only)` (no list).
+  - Omitted entirely: when no search ran on this turn (re-visit of an unsearched anchor; free-form turn that didn't qualify).
+- **Sources persistence (map file)**: each anchor in the map file may have a continuation line beneath its bullet (2-space indent, no bullet marker) recording its source state:
+  - `Sources: <url1>; <url2>` — search succeeded; populated block on revisit.
+  - `Sources: (none)` — search ran, all unusable; sticky-failure block on revisit.
+  - Line absent — no search has been attempted yet for this anchor.
+
+  Anchor-creation results (both populated and sticky) are written to the map file on the same turn the syllabus is generated. Free-form transient results are **never** written to the map file.
+- **Sticky failure scope**: a sticky failure persists for the lifetime of the map file. The user clears stickies by `restart` (which deletes the map file). There is no per-anchor re-search keyword.
+- **Tool unavailability**: if `WebSearch` or `WebFetch` is unavailable in the current session, the agent skips the search phase and renders no `Sources:` block. The map file is untouched. The skill must not block on missing tools.
 
 ## Menu options
 
@@ -116,8 +151,9 @@ Any user message that is not a recognized menu keyword (`branch`, `quiz`, `done`
 
 - **Generic depth request** (`tell me more`, `go deeper`, `more details`): cover mechanism, prerequisites, or edge cases not surfaced in the initial explanation. Same Explanation rules.
 - **Specific question** (`how does TTL work?`, `why is GET idempotent?`): answer the question directly. Same Explanation rules; narrow questions naturally produce shorter answers.
+- **Search trigger**: a free-form turn may fire one grounding search per the narrow factual trigger in "Search and sources rules" above. The result is transient — rendered as a `Sources:` block on this turn only and never persisted to the map file.
 
-After the response, re-render Terms used (subject to dedup), the syllabus (unchanged), and the menu line + invitation.
+After the response, re-render Terms used (subject to dedup), the syllabus (unchanged), the optional Sources block (only if search fired this turn), and the menu line + invitation.
 
 ## Input tolerance
 
