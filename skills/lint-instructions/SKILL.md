@@ -1,6 +1,6 @@
 ---
 name: lint-instructions
-description: Lints documentation and agent instruction files for four "instruction smells" — Duplication, Legacy Negation, Verbosity, and Ambiguous Subjectivity — and reports each finding with smell type, location, issue, and suggested refactor, then asks the user for permission before applying any fixes. Use when the user asks to lint, audit, review, or clean up CLAUDE.md, AGENTS.md, README.md, prompt files, SKILL.md files, or other documentation/instruction files for cross-file duplication, outdated negative phrasing, verbose tutorials in operational text, or vague subjective language.
+description: Lints instruction and documentation files for five smells — Duplication, Legacy Negation, Verbosity, Ambiguous Subjectivity, and Decorative Directive — reports each finding with location and rewrite, and applies fixes only after user approval. Use when the user asks to lint, audit, or clean up CLAUDE.md, AGENTS.md, SKILL.md, prompt files, or similar instruction docs.
 ---
 
 # lint-instructions
@@ -9,16 +9,17 @@ description: Lints documentation and agent instruction files for four "instructi
 
 1. Identify the target the user named: a file, glob, or directory of instruction/documentation files. If nothing was named, ask once — do not pick a default.
 2. Read every targeted file in full (not partial reads). For directories, enumerate first.
-3. Scan each file for the four smells defined below. For Duplication, compare across all targeted files.
-4. Emit findings in the **Output format** block — one block per finding, no other prose between blocks.
-5. After the findings, print a one-line count summary by smell type, then ask: `Apply these refactors? Reply with finding numbers, "all", or "none".`
-6. Only after explicit user approval, edit the files. Apply only the approved findings.
+3. For each targeted file, evaluate every smell type against the file before emitting findings — do not skip evaluation on grounds of brevity, polish, or familiarity. Absence of a smell is recorded by the zero count in the summary line, not by silence.
+4. For Duplication, run a cross-file pass after the per-file scans, comparing every targeted file against every other.
+5. Emit findings in the **Output format** block — one block per finding, no other prose between blocks.
+6. After the findings, print the summary line, then ask: `Apply these refactors? Reply with finding numbers, "all", or "none".`
+7. Only after explicit user approval, edit the files. Apply only the approved findings.
 
-## The four smells
+## The five smells
 
 ### 1. Duplication (single source of truth)
 The same rule, concept, or decision is stated in two or more files (or two distinct sections of one file).
-- **Detect**: substantively overlapping prose, not just shared terminology. Paraphrases count.
+- **Detect**: deletion test — if you removed one passage, would compliance with the rule change? If no, the passages duplicate. Paraphrases count; shared vocabulary alone does not.
 - **Refactor**: pick one authoritative location; replace the others with a one-line reference (e.g. `See [path/to/file.md](path/to/file.md) §Section`).
 
 ### 2. Legacy Negation
@@ -39,13 +40,18 @@ Vague, unmeasurable adjectives that produce unpredictable behavior ("good", "rob
   - "make the script robust" → "wrap external I/O in try/except and log the exception with context".
   - "summarize nicely" → "summarize in ≤3 bullet points, each ≤20 words".
 
+### 5. Decorative Directive
+An instruction whose removal would produce no observable change in lazy LLM behavior — i.e., a line that suppresses no named failure mode. This catches behavioral smells that prose-surface checks miss.
+- **Detect**: for each directive in the file, name the concrete lazy failure it prevents (e.g. "without this, the model would hedge / read partial files / edit before approval / dump a flat checklist"). If you cannot name a specific failure, the directive is decorative. Common decoys: motivational framing ("aim for excellence"), restatements of the file's purpose, generic encouragement ("be helpful"), and uncritical platitudes.
+- **Refactor**: delete the line. If deletion would in fact regress behavior, rewrite the line so it explicitly forbids the failure mode it was implicitly addressing — make the suppressed failure visible in the text.
+
 ## Output format
 
 For every finding, emit exactly this block (numbered sequentially across all files):
 
 ```
 Finding #<n>
-Smell Type: <Duplication | Legacy Negation | Verbosity | Ambiguous Subjectivity>
+Smell Type: <Duplication | Legacy Negation | Verbosity | Ambiguous Subjectivity | Decorative Directive>
 Location: <relative/path/to/file.md> §<section header or line range>
 The Issue: <one or two sentences explaining what is wrong>
 Suggested Refactor: <the exact rewritten text, or the specific action including all file paths/sections involved>
@@ -53,7 +59,7 @@ Suggested Refactor: <the exact rewritten text, or the specific action including 
 
 For Duplication, list every involved location in the `Location` field and name the chosen authoritative location in `Suggested Refactor`.
 
-If a file has no smells, do not emit a block for it. After the last finding, print one summary line of the form `Found: <D> Duplication, <L> Legacy Negation, <V> Verbosity, <A> Ambiguous Subjectivity` and then the approval prompt.
+If a file has no smells, do not emit a block for it. After the last finding, print one summary line of the form `Found: <D> Duplication, <L> Legacy Negation, <V> Verbosity, <A> Ambiguous Subjectivity, <X> Decorative Directive` and then the approval prompt.
 
 ## Approval and fixing
 
