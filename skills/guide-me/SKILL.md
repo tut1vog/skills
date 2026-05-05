@@ -1,6 +1,6 @@
 ---
 name: guide-me
-description: Explains a concept with inline jargon glosses, presents a comprehensive subtopic syllabus with visited-tracking, persists a tree map per root in /tmp, and offers menu-driven follow-up (deeper/ask/quiz/branch). Use when the user says "guide me on <concept>".
+description: Explains a concept with inline jargon glosses, presents a comprehensive subtopic syllabus with visited-tracking, persists a tree map per root in /tmp, and accepts free-form follow-ups or menu commands (quiz/branch/done). Use when the user says "guide me on <concept>".
 ---
 
 Activate only on the explicit phrasing "guide me on <concept>". Once active, stay active for plausible follow-ups (menu replies, free-form questions about the current concept) and drop the framing for clearly unrelated messages. A fresh "guide me on <concept>" resumes from the existing `/tmp/guide-me-<root-slug>.md` map if present (see Map file rules); type `restart` as the next user message to wipe and start over.
@@ -11,7 +11,7 @@ Activate only on the explicit phrasing "guide me on <concept>". Once active, sta
 2. **Explanation** — 3–5 sentences, brief but thorough. Technical precision for code and engineering topics; plain English otherwise.
 3. **Terms used** — short glossary of comprehension-blocker terms used in the explanation. See "Terms used rules" below. Omit the entire block when no terms qualify.
 4. **Syllabus** — comprehensive list of subtopics covering the current anchor's full conceptual surface. See "Syllabus rules" below.
-5. **Menu line** — exactly: `[deeper] [ask <q>] [quiz] [branch <name>] [done]`
+5. **Menu line + free-form invitation** — exactly two lines: `[quiz] [branch <name>] [done]` followed by `or ask anything about <current>` on its own line.
 
 ## Path and tree rules
 
@@ -20,7 +20,7 @@ Activate only on the explicit phrasing "guide me on <concept>". Once active, sta
   - If `<name>` matches an existing tree node (DFS-first match from root), jump to that node.
   - If `<name>` doesn't match, create it as a child of the current anchor and generate its syllabus on entry.
   - Either way, mark the destination `[x]` visited.
-- `[deeper]` and `[ask]` keep the same anchor and never modify the tree.
+- Free-form follow-ups (any non-keyword message) keep the same anchor and never modify the tree.
 - "Visited" criterion: a node is visited the moment the user `[branch]`es to it and the agent renders its explanation. The root is visited from turn 1 by virtue of the initial "guide me on <concept>" entry.
 - There is no `[back]`. To return to a parent or any earlier anchor, the user types `[branch <ancestor-name>]`; the `Path:` line shows ancestor names so the user has what to type.
 - There is no `[map]`. To view the full tree, the user runs `! cat /tmp/guide-me-<root-slug>.md`.
@@ -34,10 +34,10 @@ The `Terms used:` block lists short glosses for jargon inside the main explanati
 - **Scope**: scan only the main explanation prose. Do not scan the path line, the syllabus why-lines, or the menu.
 - **Skip the root**: never gloss the current anchor concept itself — the explanation is its definition.
 - **Format**: `**Term** — short clause, ≤12 words.` Match the bold-term shape of the syllabus.
-- **Cap**: at most 3 terms per block. If more qualify, pick the ones most load-bearing for parsing the explanation; the user can `[ask]` about the rest.
-- **Dedup**: gloss each term at most once per anchor. Track the glossed set across turns; reset it on `[branch <name>]` (entering a new anchor). Do not reset on `[deeper]` or `[ask]`.
+- **Cap**: at most 3 terms per block. If more qualify, pick the ones most load-bearing for parsing the explanation; the user can ask about the rest.
+- **Dedup**: gloss each term at most once per anchor. Track the glossed set across turns; reset it on `[branch <name>]` (entering a new anchor). Do not reset on free-form follow-ups.
 - **Empty block**: when no terms qualify (after dedup), omit the entire `Terms used:` block — do not show a placeholder.
-- **Modes**: apply on every turn that emits prose — initial, `[deeper]`, `[ask]`, `[quiz]`. In `[quiz]`, additionally never gloss the term being tested (in practice this is the anchor, already excluded above).
+- **Modes**: apply on every turn that emits prose — initial, free-form follow-ups, `[quiz]`. In `[quiz]`, additionally never gloss the term being tested (in practice this is the anchor, already excluded above).
 - **Overlap with Syllabus**: if a glossed term also appears in the syllabus, still include it in `Terms used:` — the two blocks have different jobs (definition vs. navigation motivation).
 
 ## Syllabus rules
@@ -89,15 +89,22 @@ Last updated: 2026-05-05T14:30:00Z
 
 ## Menu options
 
-- `[deeper]` — drill into the current concept (mechanism, prerequisites, edge cases). Same anchor; syllabus and map untouched.
-- `[ask <q>]` — free-form follow-up about the current concept. Answer in 2–4 sentences focused on the question, then re-render Terms used (subject to dedup), the syllabus (unchanged), and the menu. Same anchor; map untouched.
 - `[quiz]` — fire one quiz question. Adaptive: pick the format that fits the concept (free recall, multiple choice, application, counterexample), with a default bias toward **application** ("Is X a Y? Why?"). One question per call. On wrong/partial answer: identify the gap in one sentence and offer a hint, then re-show the menu. After two wrong attempts, give the answer and move on. Same anchor; map untouched.
 - `[branch <name>]` — navigate to the named node. If it matches an existing tree node, jump to it; otherwise create it as a child of the current anchor and generate its syllabus on entry. Mark visited. Updates the map file.
 - `[done]` — exit with: `Covered: <root> [n/m]. Map saved at /tmp/guide-me-<root-slug>.md. Re-run 'guide me on <root>' to resume. Done.` The map is not deleted.
 
+## Free-form follow-ups
+
+Any user message that is not a recognized menu keyword (`branch`, `quiz`, `done`, `restart`) is treated as a free-form follow-up about the current anchor. The current anchor and the map file are never modified.
+
+- **Generic depth request** (`tell me more`, `go deeper`, `more details`): respond in 3–5 sentences covering mechanism, prerequisites, or edge cases not surfaced in the initial explanation.
+- **Specific question** (`how does TTL work?`, `why is GET idempotent?`): respond in 2–4 sentences focused on the question.
+
+After the response, re-render Terms used (subject to dedup), the syllabus (unchanged), and the menu line + invitation.
+
 ## Input tolerance
 
-Parse permissively. `deeper`, `[deeper]`, `Deeper`, "go deeper" all map to `[deeper]`. A free-form message without a keyword is treated as `[ask]`. Bare `branch` (no name) → ask "which one?". Bare `quiz` → fire on the current concept. Immediately after a `Resumed:` notice, the bare keyword `restart` (no brackets needed) wipes the map file and re-initializes.
+Parse permissively. Bracketed and bare forms of `branch`, `quiz`, and `done` count as menu keywords. Bare `branch` (no name) → ask "which one?". Bare `quiz` → fire on the current concept. Anything else — including phrases like `deeper`, `go deeper`, `tell me more`, or arbitrary questions — is a free-form follow-up about the current anchor. Immediately after a `Resumed:` notice, the bare keyword `restart` (no brackets needed) wipes the map file and re-initializes.
 
 ## Worked example
 
@@ -124,7 +131,8 @@ Syllabus for idempotency:
   [ ] **Pure functions** — stronger property: same input → same output, no side effects.
   [ ] **Failure modes** — how non-idempotent retries break payments, queues, APIs.
 
-[deeper] [ask <q>] [quiz] [branch <name>] [done]
+[quiz] [branch <name>] [done]
+or ask anything about idempotency
 ```
 
 User: `branch Idempotency keys`
@@ -145,7 +153,27 @@ Syllabus for Idempotency keys:
   [ ] **Scope and collision** — per-user, per-tenant, global; avoiding clashes.
   [ ] **Failure recovery** — what happens if the dedupe store is unavailable.
 
-[deeper] [ask <q>] [quiz] [branch <name>] [done]
+[quiz] [branch <name>] [done]
+or ask anything about Idempotency keys
+```
+
+User: `how do clients usually pick a key?`
+
+(Free-form specific question → focused 2–4 sentence answer; same anchor; map untouched. `UUID` was already glossed on the previous turn for this anchor, so Terms used dedup keeps it out — block omitted.)
+
+```
+Path: idempotency [1/8] → Idempotency keys [0/4] (here)
+
+Most clients generate a UUID v4 per request — random, cheap, collision-resistant — and reuse it on retries. Some hash the request payload instead, which has the side benefit that two semantically-identical requests get the same key, so accidental double-submission also dedupes. The choice usually comes down to whether the server should treat "different bytes, same intent" as the same operation.
+
+Syllabus for Idempotency keys:
+  [ ] **Key generation** — UUID, payload hash, client-controlled vs server-issued.
+  [ ] **Storage backend** — Redis, DB tables, TTL trade-offs.
+  [ ] **Scope and collision** — per-user, per-tenant, global; avoiding clashes.
+  [ ] **Failure recovery** — what happens if the dedupe store is unavailable.
+
+[quiz] [branch <name>] [done]
+or ask anything about Idempotency keys
 ```
 
 User: `what time is it?`
