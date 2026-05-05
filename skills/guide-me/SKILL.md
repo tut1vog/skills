@@ -8,10 +8,27 @@ Activate only on the explicit phrasing "guide me on <concept>". Once active, sta
 ## Every turn produces this shape
 
 1. **Path line** — `Path: <root> [n/m] → ... → <current> (here, n/m)`. Counts = direct-children visited / direct-children total. Truncate to the last 4 hops if deeper. At root: `Path: <root> [n/m] (here)`. Atomic anchor: `Path: ... <current> (atomic, here)`.
-2. **Explanation** — 3–5 sentences, brief but thorough. Technical precision for code and engineering topics; plain English otherwise.
+2. **Explanation** — brief but thorough. Prose by default; may include one auxiliary medium (code, diagram, table, or genuinely list-shaped bullet list) when load-bearing. See "Explanation rules" below.
 3. **Terms used** — short glossary of comprehension-blocker terms used in the explanation. See "Terms used rules" below. Omit the entire block when no terms qualify.
 4. **Syllabus** — comprehensive list of subtopics covering the current anchor's full conceptual surface. See "Syllabus rules" below.
 5. **Menu line + free-form invitation** — exactly two lines: `[quiz] [branch <name>] [done]` followed by `or ask anything about <current>` on its own line.
+
+## Explanation rules
+
+The explanation block (item 2) carries the concept itself. The same rules apply on every turn that emits an explanation — initial, free-form follow-ups, `[quiz]` answer/hint.
+
+- **Length budget**: no minimum. Aim for as little as fully captures the concept for a non-expert. Soft ceiling: ~15 rendered lines including any auxiliary medium. Longer is allowed only if the concept genuinely doesn't fit.
+- **Selection — prose-default with load-bearing test**: lead with prose. Add (or replace prose with) an auxiliary medium *only* when it carries the concept more directly than words would. Test: removing the medium would make the explanation worse, not just shorter. If prose has to *describe* what a 4-line snippet would just *show*, the snippet wins.
+- **One auxiliary medium per explanation**: prose + code, OR prose + diagram, OR prose + table, OR prose + list, OR pure prose. Never stack multiple auxiliary media in one turn.
+- **Lists only when genuinely list-shaped**: parallel, independent, reorderable items (e.g., "the four idempotent HTTP verbs"). If reordering the items breaks the argument, it's prose — write it as prose.
+- **Style**: technical precision for code and engineering topics; plain English otherwise.
+- **Examples by medium** (full worked versions in `EXAMPLES.md`):
+  - Prose-shaped: idempotency, closure, "what is a monad" — 1–5 sentences, no medium.
+  - Code-shaped: recursion → 1 sentence + 4-line `factorial(n)` snippet.
+  - Diagram-shaped: TCP three-way handshake → 2 sentences + 3-line ASCII SYN/SYN-ACK/ACK.
+  - Table-shaped: Big-O comparison → 1 sentence + 4-row table of common complexities.
+  - List-shaped: idempotent HTTP verbs → 1 sentence + 4-item bulleted list.
+  - Atomic: pure function → 1 sentence, no medium.
 
 ## Path and tree rules
 
@@ -28,16 +45,16 @@ Activate only on the explicit phrasing "guide me on <concept>". Once active, sta
 
 ## Terms used rules
 
-The `Terms used:` block lists short glosses for jargon inside the main explanation prose, so the user doesn't have to ask about each unfamiliar word one-by-one.
+The `Terms used:` block lists short glosses for jargon inside the main explanation, so the user doesn't have to ask about each unfamiliar word one-by-one.
 
-- **Selection criterion**: include a term only if a non-expert would need to look it up to follow the explanation. Skip plain English; skip terms whose meaning is clear from context (e.g. "distributed systems" used descriptively).
-- **Scope**: scan only the main explanation prose. Do not scan the path line, the syllabus why-lines, or the menu.
+- **Selection criterion**: include a term only if a non-expert would need to look it up to follow the explanation. Skip plain English; skip terms whose meaning is clear from context (e.g. "distributed systems" used descriptively). The criterion is semantic, not syntactic — it filters out boilerplate like `console.log` or `for`-loops in code regardless of medium.
+- **Scope**: scan the explanation regardless of medium — prose sentences, code (including comments), diagram labels, table headers and cells, list items. Do not scan the path line, the syllabus why-lines, or the menu.
 - **Skip the root**: never gloss the current anchor concept itself — the explanation is its definition.
 - **Format**: `**Term** — short clause, ≤12 words.` Match the bold-term shape of the syllabus.
 - **Cap**: at most 3 terms per block. If more qualify, pick the ones most load-bearing for parsing the explanation; the user can ask about the rest.
 - **Dedup**: gloss each term at most once per anchor. Track the glossed set across turns; reset it on `[branch <name>]` (entering a new anchor). Do not reset on free-form follow-ups.
 - **Empty block**: when no terms qualify (after dedup), omit the entire `Terms used:` block — do not show a placeholder.
-- **Modes**: apply on every turn that emits prose — initial, free-form follow-ups, `[quiz]`. In `[quiz]`, additionally never gloss the term being tested (in practice this is the anchor, already excluded above).
+- **Modes**: apply on every turn that emits an explanation — initial, free-form follow-ups, `[quiz]`. In `[quiz]`, additionally never gloss the term being tested (in practice this is the anchor, already excluded above).
 - **Overlap with Syllabus**: if a glossed term also appears in the syllabus, still include it in `Terms used:` — the two blocks have different jobs (definition vs. navigation motivation).
 
 ## Syllabus rules
@@ -97,8 +114,8 @@ Last updated: 2026-05-05T14:30:00Z
 
 Any user message that is not a recognized menu keyword (`branch`, `quiz`, `done`, `restart`) is treated as a free-form follow-up about the current anchor. The current anchor and the map file are never modified.
 
-- **Generic depth request** (`tell me more`, `go deeper`, `more details`): respond in 3–5 sentences covering mechanism, prerequisites, or edge cases not surfaced in the initial explanation.
-- **Specific question** (`how does TTL work?`, `why is GET idempotent?`): respond in 2–4 sentences focused on the question.
+- **Generic depth request** (`tell me more`, `go deeper`, `more details`): cover mechanism, prerequisites, or edge cases not surfaced in the initial explanation. Same Explanation rules.
+- **Specific question** (`how does TTL work?`, `why is GET idempotent?`): answer the question directly. Same Explanation rules; narrow questions naturally produce shorter answers.
 
 After the response, re-render Terms used (subject to dedup), the syllabus (unchanged), and the menu line + invitation.
 
@@ -106,76 +123,6 @@ After the response, re-render Terms used (subject to dedup), the syllabus (uncha
 
 Parse permissively. Bracketed and bare forms of `branch`, `quiz`, and `done` count as menu keywords. Bare `branch` (no name) → ask "which one?". Bare `quiz` → fire on the current concept. Anything else — including phrases like `deeper`, `go deeper`, `tell me more`, or arbitrary questions — is a free-form follow-up about the current anchor. Immediately after a `Resumed:` notice, the bare keyword `restart` (no brackets needed) wipes the map file and re-initializes.
 
-## Worked example
+## Worked examples
 
-User: `guide me on idempotency`
-
-(No existing `/tmp/guide-me-idempotency.md` → generate the root syllabus and write the map.)
-
-```
-Path: idempotency [0/8] (here)
-
-An operation is idempotent when applying it more than once produces the same result as applying it once. In HTTP, GET and PUT are expected to be idempotent — retrying them after a network blip is safe — while POST is not. Idempotency matters anywhere retries happen: distributed systems, message queues, payment APIs. Designing for it usually means either making the operation naturally repeatable or attaching a unique key the receiver dedupes on.
-
-Terms used:
-  **GET / PUT / POST** — HTTP methods for reading, replacing, and creating resources.
-  **Dedupes** — drops duplicates so the same action only takes effect once.
-
-Syllabus for idempotency:
-  [ ] **HTTP method semantics** — which verbs are required to be idempotent and why.
-  [ ] **Idempotency keys** — client-supplied tokens used to dedupe retries server-side.
-  [ ] **At-least-once vs exactly-once delivery** — practical answer to "exactly-once".
-  [ ] **Retry policies** — how clients decide when and how often to retry.
-  [ ] **Server-side dedupe stores** — caches/DB tables tracking handled requests.
-  [ ] **Idempotency in databases** — UPSERT, MERGE, transactional retries.
-  [ ] **Pure functions** — stronger property: same input → same output, no side effects.
-  [ ] **Failure modes** — how non-idempotent retries break payments, queues, APIs.
-
-[quiz] [branch <name>] [done]
-or ask anything about idempotency
-```
-
-User: `branch Idempotency keys`
-
-(No existing tree node by that name → create as child of root, generate child syllabus, mark visited, write map.)
-
-```
-Path: idempotency [1/8] → Idempotency keys [0/4] (here)
-
-Idempotency keys are client-supplied tokens — typically a UUID or content hash — that a server uses to recognize and dedupe retried requests. The client sends the same key on the original and any retries; the server stores it alongside the first attempt's result and short-circuits subsequent attempts presenting the same key. This converts at-least-once retry semantics into an effectively exactly-once outcome from the server's perspective. The key's lifetime, scope, and storage backend are the main design knobs.
-
-Terms used:
-  **UUID** — universally unique identifier; standard format for collision-free random IDs.
-
-Syllabus for Idempotency keys:
-  [ ] **Key generation** — UUID, payload hash, client-controlled vs server-issued.
-  [ ] **Storage backend** — Redis, DB tables, TTL trade-offs.
-  [ ] **Scope and collision** — per-user, per-tenant, global; avoiding clashes.
-  [ ] **Failure recovery** — what happens if the dedupe store is unavailable.
-
-[quiz] [branch <name>] [done]
-or ask anything about Idempotency keys
-```
-
-User: `how do clients usually pick a key?`
-
-(Free-form specific question → focused 2–4 sentence answer; same anchor; map untouched. `UUID` was already glossed on the previous turn for this anchor, so Terms used dedup keeps it out — block omitted.)
-
-```
-Path: idempotency [1/8] → Idempotency keys [0/4] (here)
-
-Most clients generate a UUID v4 per request — random, cheap, collision-resistant — and reuse it on retries. Some hash the request payload instead, which has the side benefit that two semantically-identical requests get the same key, so accidental double-submission also dedupes. The choice usually comes down to whether the server should treat "different bytes, same intent" as the same operation.
-
-Syllabus for Idempotency keys:
-  [ ] **Key generation** — UUID, payload hash, client-controlled vs server-issued.
-  [ ] **Storage backend** — Redis, DB tables, TTL trade-offs.
-  [ ] **Scope and collision** — per-user, per-tenant, global; avoiding clashes.
-  [ ] **Failure recovery** — what happens if the dedupe store is unavailable.
-
-[quiz] [branch <name>] [done]
-or ask anything about Idempotency keys
-```
-
-User: `what time is it?`
-
-The skill defers — answer the question normally without path or menu.
+See `EXAMPLES.md` for full worked examples covering each medium — prose (idempotency), code (recursion), ASCII diagram (TCP three-way handshake), and table (Big-O comparison). Load it the first time you're unsure what an explanation should look like for the medium your concept calls for.
