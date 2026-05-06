@@ -1,5 +1,5 @@
 ---
-name: claude-md-principles
+name: claude-md-principles-context
 description: Principles for writing high-quality CLAUDE.md files — covering structure, instruction budget, length, anti-patterns, and progressive disclosure. Use when writing a new CLAUDE.md, improving an existing one, or answering questions about what belongs in CLAUDE.md.
 ---
 
