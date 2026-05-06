@@ -43,7 +43,7 @@ Produce four components:
 
 ## Phase 4: Write the context skill
 
-1. **Derive the slug** from the topic/question: lowercase, hyphens only, 3–5 words (e.g. `react-suspense-concurrent-mode`).
+1. **Derive the slug** from the topic/question: lowercase, hyphens only, 3–5 words, must end with `-context` (e.g. `react-suspense-concurrent-mode-context`).
 2. **Write `.claude/skills/<slug>/SKILL.md`** using the template below.
 3. **Split to `REFERENCE.md`** if the full content would exceed 200 lines — move the Reference Links section there and add a one-line pointer in `SKILL.md`.
 
