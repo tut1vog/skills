@@ -1,10 +1,10 @@
 ---
 name: research-to-context-skill
-description: Researches a topic online and writes a reusable context skill to .claude/skills/<topic-name>/. Synthesizes findings from web sources, GitHub, and official docs into a SKILL.md (and REFERENCE.md when needed) that a future agent can load for domain knowledge. Use when the user or agent wants to research a topic and produce a reusable context skill; triggers on "research and generate a skill", "deep research", "create a context skill about", "research X for me".
+description: Researches a topic online and writes a reusable context skill to the project-level .claude/skills/<topic-name>/. Synthesizes findings from web sources, GitHub, and official docs into a SKILL.md (and REFERENCE.md when needed) that a future agent can load for domain knowledge. Use when the user or agent wants to research a topic and produce a reusable context skill; triggers on "research and generate a skill", "deep research", "create a context skill about", "research X for me".
 user-invocable: true
 ---
 
-Research a topic online and emit a reusable **context skill** — a `SKILL.md` (and optional `REFERENCE.md`) written to `.claude/skills/<topic-name>/` so any future agent can load it for domain knowledge without re-doing the research.
+Research a topic online and emit a reusable **context skill** — a `SKILL.md` (and optional `REFERENCE.md`) written to `<primary-working-directory>/.claude/skills/<topic-name>/` so any future agent can load it for domain knowledge without re-doing the research.
 
 ## Gate
 
@@ -44,7 +44,7 @@ Produce four components:
 ## Phase 4: Write the context skill
 
 1. **Derive the slug** from the topic/question: lowercase, hyphens only, 3–5 words, must end with `-context` (e.g. `react-suspense-concurrent-mode-context`).
-2. **Write `.claude/skills/<slug>/SKILL.md`** using the template below.
+2. **Write `<primary-working-directory>/.claude/skills/<slug>/SKILL.md`** using the template below. Use the primary working directory.
 3. **Split to `REFERENCE.md`** if the full content would exceed 200 lines — move the Reference Links section there and add a one-line pointer in `SKILL.md`.
 
 ### Generated SKILL.md template
