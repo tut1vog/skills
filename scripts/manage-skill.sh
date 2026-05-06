@@ -14,6 +14,11 @@
 
 set -euo pipefail
 
+RED='\033[0;31m'
+RESET='\033[0m'
+
+err() { printf "${RED}%s${RESET}\n" "$*" >&2; }
+
 usage() {
   sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
 }
@@ -25,7 +30,7 @@ for arg in "$@"; do
     -h|--help) usage; exit 0 ;;
     -u|--uninstall) mode="uninstall" ;;
     --) ;;
-    -*) echo "error: unknown flag '$arg'" >&2; usage >&2; exit 1 ;;
+    -*) err "error: unknown flag '$arg'"; usage >&2; exit 1 ;;
     *) args+=("$arg") ;;
   esac
 done
@@ -45,11 +50,11 @@ src="$repo_root/skills/$skill_name"
 
 if [[ "$mode" == "install" ]]; then
   if [[ ! -d "$src" ]]; then
-    echo "error: skill '$skill_name' not found at $src" >&2
+    err "error: skill '$skill_name' not found at $src"
     exit 1
   fi
   if [[ ! -f "$src/SKILL.md" ]]; then
-    echo "error: $src is missing SKILL.md" >&2
+    err "error: $src is missing SKILL.md"
     exit 1
   fi
 fi
@@ -58,7 +63,7 @@ if [[ -z "$project_path" ]]; then
   target_dir="$HOME/.claude/skills"
 else
   if [[ ! -d "$project_path" ]]; then
-    echo "error: project path '$project_path' is not a directory" >&2
+    err "error: project path '$project_path' is not a directory"
     exit 1
   fi
   project_path="$(cd "$project_path" && pwd)"
@@ -73,12 +78,12 @@ if [[ "$mode" == "uninstall" ]]; then
     exit 0
   fi
   if [[ ! -L "$target" ]]; then
-    echo "error: $target exists but is not a symlink; refusing to remove" >&2
+    err "error: $target exists but is not a symlink; refusing to remove"
     exit 1
   fi
   existing="$(readlink "$target")"
   if [[ "$existing" != "$src" ]]; then
-    echo "error: $target is a symlink to $existing, not $src; refusing to remove" >&2
+    err "error: $target is a symlink to $existing, not $src; refusing to remove"
     exit 1
   fi
   rm "$target"
@@ -94,13 +99,13 @@ if [[ -L "$target" ]]; then
     echo "already linked: $target -> $src"
     exit 0
   fi
-  echo "error: $target already exists as a symlink to $existing" >&2
-  echo "remove it manually to replace it" >&2
+  err "error: $target already exists as a symlink to $existing"
+  err "remove it manually to replace it"
   exit 1
 fi
 
 if [[ -e "$target" ]]; then
-  echo "error: $target already exists and is not a symlink" >&2
+  err "error: $target already exists and is not a symlink"
   exit 1
 fi
 
