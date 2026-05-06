@@ -4,7 +4,7 @@ description: Researches a topic online and writes a reusable context skill to th
 user-invocable: true
 ---
 
-Research a topic online and emit a reusable **context skill** — a `SKILL.md` (and optional `REFERENCE.md`) written to `<primary-working-directory>/.claude/skills/<topic-name>/` so any future agent can load it for domain knowledge without re-doing the research.
+Research a topic online and emit a reusable **context skill** — a `SKILL.md` (and optional `REFERENCE.md`) written to the project-level `.claude/skills/<topic-name>/` (run `pwd` to get the absolute root; never `~/.claude/`) so any future agent can load it for domain knowledge without re-doing the research.
 
 ## Gate
 
@@ -44,8 +44,9 @@ Produce four components:
 ## Phase 4: Write the context skill
 
 1. **Derive the slug** from the topic/question: lowercase, hyphens only, 3–5 words, must end with `-context` (e.g. `react-suspense-concurrent-mode-context`).
-2. **Write `<primary-working-directory>/.claude/skills/<slug>/SKILL.md`** using the template below. Use the primary working directory.
-3. **Split to `REFERENCE.md`** if the full content would exceed 200 lines — move the Reference Links section there and add a one-line pointer in `SKILL.md`.
+2. **Run `pwd`** via Bash to get the absolute project root. Use that result — **never** `~/.claude/`.
+3. **Write `<pwd-result>/.claude/skills/<slug>/SKILL.md`** using the template below.
+4. **Split to `REFERENCE.md`** if the full content would exceed 200 lines — move the Reference Links section there and add a one-line pointer in `SKILL.md`.
 
 ### Generated SKILL.md template
 
