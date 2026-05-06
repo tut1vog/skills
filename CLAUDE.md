@@ -1,6 +1,6 @@
 # skills
 
-A workspace for authoring Claude Code skills. Each authored skill is a directory under `skills/<skill-name>/`.
+A versioned workspace for authoring and publishing reusable Claude Code skills — each skill is a self-contained directory consumable by any Claude Code project. Each authored skill lives under `skills/<skill-name>/`.
 
 ## Stack
 - Markdown for `SKILL.md` and supporting docs.
@@ -11,8 +11,4 @@ A workspace for authoring Claude Code skills. Each authored skill is a directory
 
 See [README.md](README.md#layout) for the directory layout.
 
-## Rules (load on demand)
-Each rule file below is a focused behavioral contract. Read a rule file when its trigger matches your task — do not auto-load.
-
-- `.claude/rules/skill-authoring.md` — read before creating, editing, or reviewing any skill (anything under `skills/` or `.claude/skills/`).
-- `.claude/rules/git.md` — read before making any commit.
+`skills/` is for authoring; `.claude/skills/` is where installed skills live (managed by `scripts/manage-skill.sh`, not edited directly).
