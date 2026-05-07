@@ -2,7 +2,7 @@
 
 A workspace for authoring [Claude Code](https://docs.claude.com/en/docs/claude-code) skills.
 
-Each skill is a self-contained directory under `skills/<skill-name>/` with a `SKILL.md` and any supporting files. The `write-a-skill` skill (loaded into this project under `.claude/skills/`) guides the authoring process.
+Each skill is a self-contained directory under `skills/<skill-name>/` with a `SKILL.md` and any supporting files.
 
 ## Layout
 
@@ -13,16 +13,24 @@ skills/                    # Authored skills (source of truth for distribution)
     ├── REFERENCE.md       # Optional — detailed docs
     ├── EXAMPLES.md        # Optional — usage examples
     └── scripts/           # Optional — utility scripts
-
-.claude/skills/            # Skills loaded into THIS project's Claude session
-└── write-a-skill/         # Helper that drives skill authoring here
+scripts/
+└── manage-skill.sh        # Install/uninstall skills to .claude/skills/
 ```
+
+## Skills
+
+- **audit-claude-config** — Audits a Claude Code project's configuration against upstream best practices and produces a findings report.
+- **claude-md-principles-context** — Principles for writing high-quality CLAUDE.md files (structure, instruction budget, anti-patterns).
+- **grill-me** — Interviews you relentlessly about a plan or design until reaching shared understanding.
+- **guide-me** — Guided exploration of any concept with a tracked subtopic syllabus and quiz mode.
+- **lint-instructions** — Lints instruction files for duplication, legacy negation, verbosity, ambiguous subjectivity, and decorative directives.
+- **research-to-context-skill** — Researches a topic online and writes a reusable context skill file.
+- **skills-as-context** — Explains the context-skill pattern and provides the canonical template for authoring one.
+- **take-notes** — Writes a markdown note from conversation context and/or external sources.
 
 ## Authoring a new skill
 
-In a Claude Code session inside this repo, ask Claude to create a new skill. The `write-a-skill` skill is auto-loaded and walks through requirements gathering, drafting, and review. The output lands under `skills/<skill-name>/`.
-
-See [`.claude/rules/skill-authoring.md`](.claude/rules/skill-authoring.md) for the project's authoring rules.
+In a Claude Code session inside this repo, ask Claude to author a new skill. Claude follows the rules in [`.claude/rules/skill-authoring.md`](.claude/rules/skill-authoring.md) (auto-loaded every session) — no manual setup needed. The output lands under `skills/<skill-name>/`.
 
 ## License
 
