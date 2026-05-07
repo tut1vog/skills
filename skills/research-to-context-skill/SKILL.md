@@ -43,7 +43,7 @@ Produce four components:
 
 ## Phase 4: Write the context skill
 
-1. **Derive the slug** from the topic/question: lowercase, hyphens only, 3–5 words, must end with `-context` (e.g. `react-suspense-concurrent-mode-context`).
+1. **Derive the slug** from the topic/question: lowercase, hyphens only, 3–5 words, must end with `-context` (e.g. `react-suspense-concurrent-mode-context`). Show the proposed slug and a one-sentence rationale. Wait for user confirmation or an alternative before writing anything to disk.
 2. **Run `pwd`** via Bash to get the absolute project root. Use that result — **never** `~/.claude/`.
 3. **Write `<pwd-result>/.claude/skills/<slug>/SKILL.md`** using the template below.
 4. **Split to `REFERENCE.md`** if the full content would exceed 200 lines — move the Reference Links section there and add a one-line pointer in `SKILL.md`.
