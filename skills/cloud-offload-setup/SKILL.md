@@ -3,13 +3,10 @@ name: cloud-offload-setup
 description: Walks the user through the prerequisites for the cloud-offload skill on AWS: aws CLI, a least-privilege IAM identity behind the `cloud-offload` profile, an SSH key, the config file, and a passing `offload doctor`. Use when the user asks to set up, configure, or fix cloud-offload, or when `offload doctor` reports a failing check.
 disable-model-invocation: true
 ---
-
 # cloud-offload-setup
-
 Interactive. Do every step with the user watching, print each mutating command before running it, and get an explicit yes before any command that touches IAM. Never paste an access key into the conversation.
 
 ## Steps
-
 1. **Locate the tool.** `OFFLOAD` is the first existing path of `.claude/skills/cloud-offload/scripts/offload.py` (project) or `~/.claude/skills/cloud-offload/scripts/offload.py`. If neither exists, tell the user to install the `cloud-offload` skill first and stop. Everywhere below, `offload` means `python3 "$OFFLOAD"`.
 
 2. **aws CLI.** `aws --version`. If missing: macOS `brew install awscli`, Linux `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip && unzip awscliv2.zip && sudo ./aws/install`, Windows `winget install Amazon.AWSCLI`.
