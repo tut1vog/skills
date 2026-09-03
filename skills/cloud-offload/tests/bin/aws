@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+"""Fake `aws` CLI for offload tests. Logs every call as a JSON line to $OFFLOAD_FAKE_LOG.
+
+Scenario knobs (env):
+  OFFLOAD_FAKE_SPOT_FAIL=1     run-instances with spot market options fails with InsufficientInstanceCapacity
+  OFFLOAD_FAKE_KEY_EXISTS=1    describe-key-pairs succeeds instead of NotFound
+  OFFLOAD_FAKE_INSTANCES=json  list of {id,state,ip,name,lifecycle} used by describe-instances
+"""
+import json
+import os
+import sys
+
+argv = sys.argv[1:]
+with open(os.environ["OFFLOAD_FAKE_LOG"], "a") as f:
+    f.write(json.dumps(argv) + "\n")
+
+
+def out(obj, rc=0):
+    print(json.dumps(obj))
+    sys.exit(rc)
+
+
+def err(msg, rc=254):
+    sys.stderr.write(f"\nAn error occurred ({msg}) when calling the operation\n")
+    sys.exit(rc)
+
+
+if argv[:3] == ["configure", "get", "region"]:
+    print("ap-southeast-1")
+    sys.exit(0)
+
+# strip global flags
+pos = []
+i = 0
+while i < len(argv):
+    if argv[i] in ("--profile", "--region", "--output"):
+        i += 2
+    else:
+        pos.append(argv[i])
+        i += 1
+service, op, rest = pos[0], pos[1], pos[2:]
+
+
+def flag(name, default=None):
+    return rest[rest.index(name) + 1] if name in rest else default
+
+
+def instances():
+    raw = os.environ.get("OFFLOAD_FAKE_INSTANCES")
+    items = json.loads(raw) if raw else [{"id": "i-fake001", "state": "running", "ip": "203.0.113.10",
+                                          "name": "default", "lifecycle": "spot"}]
+    res = []
+    for it in items:
+        d = {"InstanceId": it["id"], "State": {"Name": it["state"]}, "InstanceType": "c7i.xlarge",
+             "LaunchTime": "2026-01-01T00:00:00+00:00",
+             "Tags": [{"Key": "cloud-offload:managed", "Value": "true"},
+                      {"Key": "cloud-offload:name", "Value": it.get("name", "default")},
+                      {"Key": "cloud-offload:deadline", "Value": "2026-01-01T08:00:00Z"}]}
+        if it.get("ip"):
+            d["PublicIpAddress"] = it["ip"]
+        if it.get("lifecycle"):
+            d["InstanceLifecycle"] = it["lifecycle"]
+        res.append(d)
+    return res
+
+
+if (service, op) == ("sts", "get-caller-identity"):
+    out({"Arn": "arn:aws:iam::123456789012:user/cloud-offload", "Account": "123456789012"})
+if (service, op) == ("ec2", "describe-vpcs"):
+    out({"Vpcs": [{"VpcId": "vpc-fake"}]})
+if (service, op) == ("ssm", "get-parameter"):
+    out({"Parameter": {"Value": "ami-fake"}})
+if (service, op) == ("ec2", "describe-security-groups"):
+    out({"SecurityGroups": [{"GroupId": "sg-fake"}]})
+if (service, op) == ("ec2", "describe-key-pairs"):
+    if os.environ.get("OFFLOAD_FAKE_KEY_EXISTS"):
+        out({"KeyPairs": [{"KeyName": flag("--key-names")}]})
+    err("InvalidKeyPair.NotFound")
+if (service, op) == ("ec2", "import-key-pair"):
+    out({"KeyName": flag("--key-name")})
+if (service, op) == ("ec2", "describe-instance-types"):
+    t = flag("--instance-types")
+    table = {"c7i.xlarge": (4, 8192, False), "t3.micro": (2, 1024, False),
+             "m7i.8xlarge": (32, 131072, False), "g5.xlarge": (4, 16384, True)}
+    if t not in table:
+        err("InvalidInstanceType")
+    v, m, g = table[t]
+    d = {"InstanceType": t, "VCpuInfo": {"DefaultVCpus": v}, "MemoryInfo": {"SizeInMiB": m}}
+    if g:
+        d["GpuInfo"] = {"Gpus": []}
+    out({"InstanceTypes": [d]})
+if (service, op) == ("ec2", "run-instances"):
+    if "--dry-run" in rest:
+        err("DryRunOperation", rc=254)
+    if "--instance-market-options" in rest and os.environ.get("OFFLOAD_FAKE_SPOT_FAIL"):
+        err("InsufficientInstanceCapacity")
+    out({"Instances": [{"InstanceId": "i-fake001"}]})
+if (service, op) == ("ec2", "wait"):
+    sys.exit(0)
+if (service, op) == ("ec2", "describe-instances"):
+    ids = flag("--instance-ids")
+    res = instances()
+    if ids:
+        res = [r for r in res if r["InstanceId"] == ids]
+        if not res:
+            err("InvalidInstanceID.NotFound")
+    out({"Reservations": [{"Instances": res}]})
+if (service, op) in (("ec2", "terminate-instances"), ("ec2", "create-tags"),
+                     ("ec2", "create-security-group"), ("ec2", "authorize-security-group-ingress")):
+    out({"ok": True, "GroupId": "sg-new"})
+err(f"Unhandled fake call: {service} {op}", rc=1)

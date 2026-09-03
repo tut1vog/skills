@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Fake `ssh-keygen`: logs argv, does nothing."""
+import json
+import os
+import sys
+
+with open(os.environ["OFFLOAD_FAKE_LOG"], "a") as f:
+    f.write(json.dumps(["ssh-keygen", *sys.argv[1:]]) + "\n")
