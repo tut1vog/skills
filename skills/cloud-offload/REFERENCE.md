@@ -8,10 +8,7 @@ Companion to [SKILL.md](SKILL.md). Everything here describes `scripts/offload.py
 python3 <skill-dir>/scripts/offload.py [--provider P] [--profile NAME] [--region R] <subcommand> [flags]
 ```
 
-Global flags precede the subcommand. Requires Python 3.10+, the `aws` CLI, `ssh`, and `rsync` (falls back
-to `scp`). Stdout is always one JSON document; errors go to stderr as `error: ...` with exit code 1.
-Exit codes for `run --wait`: 0 job exited 0, 3 job exited non-zero, 2 still running at timeout,
-1 job interrupted or unreachable.
+Global flags precede the subcommand. Requires Python 3.10+, the `aws` CLI, `ssh`, and `rsync` (falls back to `scp`). Stdout is always one JSON document; errors go to stderr as `error: ...` with exit code 1. Exit codes for `run --wait`: 0 job exited 0, 3 job exited non-zero, 2 still running at timeout, 1 job interrupted or unreachable.
 
 ## Subcommands
 
@@ -28,8 +25,7 @@ Exit codes for `run --wait`: 0 job exited 0, 3 job exited non-zero, 2 still runn
 | `list` | | `{provider,instances:[{name,id,state,ip,type,deadline,pricing,tracked,orphan?}],removed_stale_local_entries}` |
 | `doctor` | `--print-policy` | `{ok,provider,checks:[{check,ok,detail}]}`; exit 1 if any check fails |
 
-Job states: `running`, `exited` (see `exit_code`), `interrupted` (instance gone: spot reclaim, TTL, or
-terminated elsewhere), `unreachable` (instance exists but SSH failed; retry).
+Job states: `running`, `exited` (see `exit_code`), `interrupted` (instance gone: spot reclaim, TTL, or terminated elsewhere), `unreachable` (instance exists but SSH failed; retry).
 
 ## Defaults and guardrails
 
@@ -58,8 +54,7 @@ terminated elsewhere), `unreachable` (instance exists but SSH failed; retry).
   out/       $OUT; what `fetch` downloads by default
 ```
 
-Environment inside the job: `OUT`, `JOB`, `DEBIAN_FRONTEND=noninteractive`; cwd is the job directory.
-The job runs under `nohup setsid`, so it survives the SSH session and the local agent.
+Environment inside the job: `OUT`, `JOB`, `DEBIAN_FRONTEND=noninteractive`; cwd is the job directory. The job runs under `nohup setsid`, so it survives the SSH session and the local agent.
 
 ## Local files
 
@@ -71,22 +66,15 @@ The job runs under `nohup setsid`, so it survives the SSH session and the local 
   known_hosts                per-tool host keys; `up` forgets the IP before first connect
 ```
 
-`region: null` defers to the profile. `list` treats the cloud's tags as the source of truth: entries in
-`instances.json` with no live instance are dropped, live tagged instances with no entry are reported as
-`orphan` and are covered by `down --all`.
+`region: null` defers to the profile. `list` treats the cloud's tags as the source of truth: entries in `instances.json` with no live instance are dropped, live tagged instances with no entry are reported as `orphan` and are covered by `down --all`.
 
 ## IAM policy
 
-`offload doctor --print-policy` prints the least-privilege policy the `cloud-offload` identity needs.
-Summary: read-only `ec2:Describe*` and `sts:GetCallerIdentity`; `ssm:GetParameter` on the public canonical
-Ubuntu path; `ec2:RunInstances`, `ImportKeyPair`, `CreateSecurityGroup`; `ec2:CreateTags` only during those
-create actions; terminate/stop/tag/security-group mutations only on resources tagged
-`cloud-offload:managed=true`; `iam:CreateServiceLinkedRole` for `spot.amazonaws.com` (needed once per account).
+`offload doctor --print-policy` prints the least-privilege policy the `cloud-offload` identity needs. Summary: read-only `ec2:Describe*` and `sts:GetCallerIdentity`; `ssm:GetParameter` on the public canonical Ubuntu path; `ec2:RunInstances`, `ImportKeyPair`, `CreateSecurityGroup`; `ec2:CreateTags` only during those create actions; terminate/stop/tag/security-group mutations only on resources tagged `cloud-offload:managed=true`; `iam:CreateServiceLinkedRole` for `spot.amazonaws.com` (needed once per account).
 
 ## Provider interface
 
-Add a provider by subclassing `Provider` in `offload.py` and registering it in `PROVIDERS`. Provider code
-must not leak outside its class; `tests/test_offload.py` greps for that.
+Add a provider by subclassing `Provider` in `offload.py` and registering it in `PROVIDERS`. Provider code must not leak outside its class; `tests/test_offload.py` greps for that.
 
 ```
 from_config(section, args) -> Provider    build from config.json section plus CLI overrides
@@ -103,8 +91,7 @@ doctor(pubkey_path) -> [{check, ok, detail}]
 policy() -> dict                           least-privilege policy document for the provider
 ```
 
-`user_data` is a cloud-init shell script the provider must pass verbatim; it carries the TTL shutdown.
-A provider without terminate-on-shutdown should implement the TTL with its own scheduler in `create`.
+`user_data` is a cloud-init shell script the provider must pass verbatim; it carries the TTL shutdown. A provider without terminate-on-shutdown should implement the TTL with its own scheduler in `create`.
 
 ## Tests
 
@@ -112,5 +99,4 @@ A provider without terminate-on-shutdown should implement the TTL with its own s
 python3 -m unittest discover -s skills/cloud-offload/tests -v
 ```
 
-Fake `aws`, `ssh`, `rsync`, and `ssh-keygen` live in `tests/bin/` and log every call to a file; no cloud
-access or cost. Scenario knobs are documented at the top of `tests/bin/aws` and `tests/bin/ssh`.
+Fake `aws`, `ssh`, `rsync`, and `ssh-keygen` live in `tests/bin/` and log every call to a file; no cloud access or cost. Scenario knobs are documented at the top of `tests/bin/aws` and `tests/bin/ssh`.
