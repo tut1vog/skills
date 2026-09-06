@@ -1,6 +1,9 @@
 ---
 name: cloud-offload
 description: Runs resource-intensive, self-contained tasks on a short-lived cloud VM (AWS EC2 today, provider-pluggable) via a bundled CLI that launches the instance, dispatches a script, polls status, fetches results, and terminates. Use when a task would take more than a few minutes of heavy CPU, memory, disk, or bandwidth on the local machine, when the user asks to run something "in the cloud" or "on a VPS", or when a download-and-process job does not need local files as input.
+metadata:
+  author: tut1vog
+  version: "1.0"
 ---
 # cloud-offload
 Tool: `python3 <skill-dir>/scripts/offload.py <subcommand>` where `<skill-dir>` is this skill's directory (`.claude/skills/cloud-offload` in the project, else `~/.claude/skills/cloud-offload`). Global flags (`--provider`, `--profile`, `--region`) go before the subcommand. Every subcommand prints JSON on stdout. Full flag and output reference: [REFERENCE.md](REFERENCE.md).

@@ -1,7 +1,9 @@
 ---
 name: cloud-offload-setup
-description: Walks the user through the prerequisites for the cloud-offload skill on AWS: aws CLI, a least-privilege IAM identity behind the `cloud-offload` profile, an SSH key, the config file, and a passing `offload doctor`. Use when the user asks to set up, configure, or fix cloud-offload, or when `offload doctor` reports a failing check.
-disable-model-invocation: true
+description: "Walks the user through the prerequisites for the cloud-offload skill on AWS: aws CLI, a least-privilege IAM identity behind the `cloud-offload` profile, an SSH key, the config file, and a passing `offload doctor`. Use when the user asks to set up, configure, or fix cloud-offload, or when `offload doctor` reports a failing check."
+metadata:
+  author: tut1vog
+  version: "1.0"
 ---
 # cloud-offload-setup
 Interactive. Do every step with the user watching, print each mutating command before running it, and get an explicit yes before any command that touches IAM. Never paste an access key into the conversation.

@@ -1,6 +1,9 @@
 ---
 name: lint-instructions
 description: Lints instruction and documentation files for five smells — Duplication, Legacy Negation, Verbosity, Ambiguous Subjectivity, and Decorative Directive — reports each finding with location and rewrite, and applies fixes only after user approval. Use when the user asks to lint, audit, or clean up CLAUDE.md, AGENTS.md, SKILL.md, prompt files, or similar instruction docs.
+metadata:
+  author: tut1vog
+  version: "1.0"
 ---
 
 # lint-instructions
