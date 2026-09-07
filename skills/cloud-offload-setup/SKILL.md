@@ -5,6 +5,7 @@ metadata:
   author: tut1vog
   version: "1.0"
 ---
+
 # cloud-offload-setup
 Interactive. Do every step with the user watching, print each mutating command before running it, and get an explicit yes before any command that touches IAM. Never paste an access key into the conversation.
 

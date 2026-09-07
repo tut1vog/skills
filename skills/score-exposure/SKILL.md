@@ -2,7 +2,11 @@
 name: score-exposure
 description: Classify supplied vulnerability evidence into six configuration exposure tiers, identifying required conditions and the basis for the classification.
 allowed-tools: Read, Grep, Glob, Bash
+metadata:
+  author: tut1vog
+  version: "1.0"
 ---
+
 # Score Exposure Tier
 ## Evidence
 Use only evidence supplied inline or in caller-designated files and directories, including supplied source code and packaging configurations. Do not modify files, start environments, or execute exploits.

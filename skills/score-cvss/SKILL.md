@@ -4,8 +4,9 @@ description: Score supplied vulnerability evidence using CVSS 4.0 Base+Threat wi
 allowed-tools: Read, Grep, Glob, Bash
 metadata:
   author: tut1vog
-  version: "1.1"
+  version: "1.0"
 ---
+
 # Score CVSS 4.0 (Base + Threat)
 ## Evidence
 Use only the evidence supplied inline or in caller-designated files and directories. Identify demonstrated impacts and required access, privileges, interaction, and preconditions. Do not modify files, start environments, or execute exploits.

@@ -5,6 +5,7 @@ metadata:
   author: tut1vog
   version: "1.0"
 ---
+
 # cloud-offload
 Tool: `python3 <skill-dir>/scripts/offload.py <subcommand>` where `<skill-dir>` is this skill's directory (`.claude/skills/cloud-offload` in the project, else `~/.claude/skills/cloud-offload`). Global flags (`--provider`, `--profile`, `--region`) go before the subcommand. Every subcommand prints JSON on stdout. Full flag and output reference: [REFERENCE.md](REFERENCE.md).
 
